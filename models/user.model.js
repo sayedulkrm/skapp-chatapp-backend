@@ -2,6 +2,7 @@ import { Schema } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 const userSchema = new Schema(
     {
@@ -35,6 +36,11 @@ const userSchema = new Schema(
             },
         },
 
+        role: {
+            type: String,
+            default: "user",
+        },
+
         isVarified: {
             type: Boolean,
             default: false,
@@ -56,6 +62,19 @@ userSchema.pre("save", async function (next) {
 // compare password
 userSchema.methods.comparePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
+};
+
+// sign access token
+userSchema.methods.SignAccessToken = function () {
+    return jwt.sign({ _id: this._id }, process.env.ACCESS_TOKEN || "", {
+        expiresIn: "5m",
+    });
+};
+
+userSchema.methods.SignRefreshToken = function () {
+    return jwt.sign({ _id: this._id }, process.env.REFRESH_TOKEN || "", {
+        expiresIn: "7d",
+    });
 };
 
 const userModel = mongoose.model("User", userSchema);

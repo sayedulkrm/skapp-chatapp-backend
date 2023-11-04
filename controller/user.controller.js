@@ -8,6 +8,7 @@ import ejs from "ejs";
 
 // import fs from "fs";
 import { fileURLToPath } from "url";
+import { sendToken } from "../utils/Jwt.js";
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -127,6 +128,47 @@ export const activateUser = CatchAsyncError(async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Account activated successfully",
+        });
+    } catch (error) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+// Login user
+export const userLogin = CatchAsyncError(async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return next(new ErrorHandler("Please enter all fields", 400));
+        }
+
+        const user = await userModel.findOne({ email }).select("+password");
+
+        if (!user) {
+            return next(new ErrorHandler("Invalid email or password", 400));
+        }
+
+        const isPasswordMatched = await user.comparePassword(password);
+
+        if (!isPasswordMatched) {
+            return next(new ErrorHandler("Invalid email or password", 400));
+        }
+
+        sendToken(user, 200, res);
+    } catch (error) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+export const userLogout = CatchAsyncError(async (req, res, next) => {
+    try {
+        res.cookie("access_token", "", { maxAge: 1 });
+        res.cookie("refresh_token", "", { maxAge: 1 });
+
+        res.status(200).json({
+            success: true,
+            message: "Logged out successfully",
         });
     } catch (error) {
         return next(new ErrorHandler(error.message, 500));
