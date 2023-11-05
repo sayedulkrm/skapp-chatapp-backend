@@ -21,7 +21,7 @@ export const accessTokenOptions = {
 };
 
 export const refreshTokenOptions = {
-    expires: new Date(Date.now() + accessTokenExpire * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + refreshTokenExpire * 24 * 60 * 60 * 1000),
     maxAge: refreshTokenExpire * 24 * 60 * 60 * 1000,
     httpOnly: true,
     // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
@@ -30,7 +30,7 @@ export const refreshTokenOptions = {
     sameSite: "none",
 };
 
-export const sendToken = (user, statusCode, res) => {
+export const sendToken = (user, statusCode, message, res) => {
     const accessToken = user.SignAccessToken();
     const refreshToken = user.SignRefreshToken();
 
@@ -48,6 +48,7 @@ export const sendToken = (user, statusCode, res) => {
     res.status(statusCode).json({
         success: true,
         user,
+        message,
         accessToken,
     });
 };
