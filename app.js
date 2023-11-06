@@ -6,9 +6,14 @@ config({
 });
 
 import cookieParser from "cookie-parser";
+import cookieSession from "cookie-session";
+import passport from "passport";
+
 import cors from "cors";
 import ErrorMiddleware from "./middlewares/ErrorMiddleware.js";
 import ErrorHandler from "./utils/ErrorHandler.js";
+
+import PassportStragy from "./utils/Passport.js";
 
 const app = express();
 
@@ -22,6 +27,32 @@ app.use(
 // Cookie parser
 app.use(cookieParser());
 
+// Cookie session
+app.use(
+    cookieSession({
+        name: "session",
+        keys: ["skapp"],
+        maxAge: 24 * 60 * 60 * 1000,
+    })
+);
+
+app.use(function (request, response, next) {
+    if (request.session && !request.session.regenerate) {
+        request.session.regenerate = (cb) => {
+            cb();
+        };
+    }
+    if (request.session && !request.session.save) {
+        request.session.save = (cb) => {
+            cb();
+        };
+    }
+    next();
+});
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 //
 app.use(
     cors({
@@ -32,8 +63,10 @@ app.use(
 );
 
 import userRoute from "./routers/user.route.js";
+import authRoute from "./routers/auth.js";
 
 app.use("/api/v1", userRoute);
+app.use("/", authRoute);
 
 app.get("/", (req, res) => {
     res.send(
