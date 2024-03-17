@@ -1,14 +1,19 @@
-import { Schema } from "mongoose";
-import validator from "validator";
 import bcrypt from "bcrypt";
-import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import mongoose, { Schema } from "mongoose";
+import validator from "validator";
 
 const userSchema = new Schema(
     {
         name: {
             type: String,
             required: [true, "Please enter a name"],
+        },
+
+        username: {
+            type: String,
+            required: [true, "Please enter a username"],
+            unique: true,
         },
 
         email: {
@@ -41,7 +46,7 @@ const userSchema = new Schema(
             default: "user",
         },
 
-        isVarified: {
+        isVerified: {
             type: Boolean,
             default: false,
         },
@@ -77,6 +82,6 @@ userSchema.methods.SignRefreshToken = function () {
     });
 };
 
-const userModel = mongoose.model("User", userSchema);
+const userModel = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default userModel;

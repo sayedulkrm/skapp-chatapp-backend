@@ -1,9 +1,10 @@
 import express from "express";
 import passport from "passport";
+import { socialAuth } from "../controller/user.controller.js";
 
 const authRoute = express.Router();
 
-const passRedirect = `${process.env.FRONTEND_URL}/profile`;
+const passRedirect = `${process.env.FRONTEND_URL}`;
 const failRedirect = `${process.env.FRONTEND_URL}/login`;
 
 authRoute
@@ -12,28 +13,22 @@ authRoute
 
 authRoute.route("/auth/google/callback").get(
     // Continue to the next middleware},
+
+    // Hey am getting called ====
     passport.authenticate("google", {
         successRedirect: passRedirect,
         failureRedirect: failRedirect,
     })
 );
 
-authRoute.route("/login/success").get((req, res) => {
-    if (req.user) {
-        res.status(200).json({
-            success: true,
-            message: "successfull",
-            user: req.user,
-        });
-    } else {
-        res.status(404).json({
-            success: false,
-            message: "user not found",
-        });
-    }
-});
+authRoute.route("/google/login/success").get(socialAuth);
 
-authRoute.route("/login/failed").get((req, res) => {
+authRoute.route("/google/login/failed").get((req, res) => {
+    console.log("Heyyyy! am getting called ========= /login/ failed ========");
+
+    console.log(req.user, "req.user  failed ==========");
+    console.log(req, "req ====== login failed");
+
     res.status(401).json({
         success: false,
         message: "OAuth Login failure",

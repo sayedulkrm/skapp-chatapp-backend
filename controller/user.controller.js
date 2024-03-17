@@ -124,7 +124,7 @@ export const activateUser = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("User already exist", 400));
         }
 
-        const user = await userModel.create({
+        await userModel.create({
             name,
             email,
             password,
@@ -170,8 +170,48 @@ export const userLogin = CatchAsyncError(async (req, res, next) => {
 
 export const userLogout = CatchAsyncError(async (req, res, next) => {
     try {
-        res.cookie("access_token", "", { maxAge: 1 });
-        res.cookie("refresh_token", "", { maxAge: 1 });
+        res.cookie("access_token", "", {
+            maxAge: 0,
+            expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+        res.cookie("refresh_token", "", {
+            maxAge: 0,
+            expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+        res.cookie("connect.sid", "", {
+            maxAge: 0,
+            expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+
+        res.cookie("skapp_google_session", "", {
+            maxAge: 0,
+            expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+
+        res.cookie("skapp_google_session.sig", "", {
+            maxAge: 0,
+            expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+
+        req.logout(req.user, (err) => {
+            if (err) return next(err);
+            // res.redirect("/");
+        });
 
         res.status(200).json({
             success: true,
@@ -242,15 +282,43 @@ export const getUserInfo = CatchAsyncError(async (req, res, next) => {
 
 // social auth
 export const socialAuth = CatchAsyncError(async (req, res, next) => {
+    console.log("Heyy am social auth", req.user);
+
     try {
-        const { email, name, avatar } = req.body;
+        // const { email, name, avatar } = req.user;
+
+        if (!req.user) {
+            return next(new ErrorHandler("No User Comes", 404));
+        }
+
+        const email = req.user.emails[0].value; // Email from Google response
+        const name = `${req.user?.name?.givenName.toLowerCase()}_${req.user?.name?.familyName.toLowerCase()}`;
+
+        // Generate a 4-digit random number
+        const randomNumber = Math.floor(1000 + Math.random() * 9000);
+
+        const finalUsername = `${name}${randomNumber}`;
+        // const first_name = profile.name.givenName; // First name from Google response
+        // const last_name = profile.name.familyName; // Last name from Google response
+        const avatar = req.user.photos[0].value;
 
         const user = await userModel.findOne({ email });
 
         if (!user) {
-            const newUser = await userModel.create({ email, name, avatar });
+            const newUser = await userModel.create({
+                email,
+                name,
+                avatar: {
+                    public_id: avatar,
+                    url: avatar,
+                },
+                username: finalUsername,
+            });
+            console.log("heyyyy i created a new user");
             sendToken(newUser, 200, `Welcome ${newUser.name}`, res);
         } else {
+            console.log("heyyyy i am not created any user");
+
             sendToken(user, 200, `Welcome Back ${user.name}`, res);
         }
     } catch (error) {

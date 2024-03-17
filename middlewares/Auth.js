@@ -17,6 +17,10 @@ export const isAuthenticated = CatchAsyncError(async (req, res, next) => {
     try {
         const decoded = jwt.verify(access_token, process.env.ACCESS_TOKEN);
 
+        // if (!decoded) {
+        //     return next(new ErrorHandler("Invalid access_token", 400));
+        // }
+
         // find the user
         const user = await userModel.findById(decoded._id);
 

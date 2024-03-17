@@ -10,5 +10,6 @@ export const connectDB = async () => {
             error,
             "Ohh No! an error occured to connecting with database"
         );
+        throw error;
     }
 };

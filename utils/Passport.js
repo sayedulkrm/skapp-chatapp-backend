@@ -1,7 +1,5 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import userModel from "../models/user.model.js";
-import mongoose from "mongoose";
 
 import { config } from "dotenv";
 
@@ -14,29 +12,81 @@ const PassportStragy = passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "/auth/google/callback",
+            callbackURL: "/api/v1/auth/google/callback",
             scope: ["profile", "email"],
         },
         async (accessToken, refreshToken, profile, done) => {
             console.log("Profile ID:", profile.id);
 
-            const email = profile.emails[0].value;
-
             try {
-                const isUserExist = await userModel.findOne({
-                    email,
-                });
+                // console.log("Profile ID:", profile);
+                // const email = profile.emails[0].value; // Email from Google response
+                // const usernameBase = `${profile?.name?.familyName.toLowerCase()}_${profile?.name?.givenName.toLowerCase()}`;
 
-                if (!isUserExist) {
-                    console.log("User does not exist");
-                    return done(null, false, { message: "User not found" });
-                }
+                // // Generate a 4-digit random number
+                // const randomNumber = Math.floor(1000 + Math.random() * 9000);
 
-                return done(null, isUserExist);
+                // const finalUsername = `${usernameBase}${randomNumber}`;
+                // // const first_name = profile.name.givenName; // First name from Google response
+                // // const last_name = profile.name.familyName; // Last name from Google response
+                // const image_url = profile.photos[0].value; // Profile image URL from Google response profile.picture
+
+                // Check if user exists
+                // const user = await getUserByEmail(email);
+                // if (user) {
+                //     // If user exists, return the user details
+                //     // console.log("Heyyyy user exists", user);
+                //     // sendToken(expressRes, `Welcome ${user.name}`, user, 200);
+                //     return done(null, user);
+                // } else {
+                //     // If user doesn't exist, create a new user
+                //     await createUser({
+                //         email,
+                //         // first_name,
+                //         // last_name,
+                //         username: finalUsername,
+                //         image_url,
+                //     });
+                // }
+
+                // sendToken(expressRes, `Welcome ${newUser.name}`, newUser, 200);
+
+                done(null, profile);
             } catch (error) {
-                console.error("MongoDB Error:", error);
-                return done(error, false);
+                console.log("error comes");
+                done(error, false);
             }
+
+            // const id = profile.id;
+
+            // const email = profile.emails[0].value;
+
+            // const name = profile.displayName;
+
+            // const avatar = profile.photos[0].value;
+
+            // const user = {
+            //     id,
+            //     email,
+            //     name,
+            //     avatar,
+            // };
+
+            // try {
+            //     const isUserExist = await userModel.findOne({
+            //         email,
+            //     });
+
+            //     if (!isUserExist) {
+            //         console.log("User does not exist");
+            //         return done(null, false, { message: "User not found" });
+            //     }
+
+            //     return done(null, isUserExist);
+            // } catch (error) {
+            //     console.error("MongoDB Error:", error);
+            //     return done(error, false);
+            // }
 
             // if (profile.id && mongoose.Types.ObjectId.isValid(profile.id)) {
             //     // Ensure that profile.id is a valid ObjectId
@@ -78,12 +128,16 @@ const PassportStragy = passport.use(
 );
 
 passport.serializeUser((user, done) => {
-    done(null, user.id);
+    console.log("Am getting serridge...");
+
+    // console.log(user);
+
+    done(null, user);
 });
 
-passport.deserializeUser(async (id, done) => {
-    const user = await userModel.findById(id);
-
+passport.deserializeUser(async (user, done) => {
+    // const user = await getUserById(user);
+    console.log("deserialized user");
     done(null, user);
 });
 

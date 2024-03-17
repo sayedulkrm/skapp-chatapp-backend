@@ -30,9 +30,13 @@ app.use(cookieParser());
 // Cookie session
 app.use(
     cookieSession({
-        name: "session",
+        name: "skapp_google_session",
         keys: ["skapp"],
-        maxAge: 24 * 60 * 60 * 1000,
+        // maxAge: 24 * 60 * 60 * 1000,
+        // proxy: false,
+        // resave: false,
+        // saveUninitialized: true,
+        // cookie: { secure: false },
     })
 );
 
@@ -63,10 +67,10 @@ app.use(
 );
 
 import userRoute from "./routers/user.route.js";
-import authRoute from "./routers/auth.js";
+import googleAuthRoute from "./routers/google-auth.js";
 
 app.use("/api/v1", userRoute);
-app.use("/", authRoute);
+app.use("/api/v1", googleAuthRoute);
 
 app.get("/", (req, res) => {
     res.send(
@@ -80,6 +84,6 @@ app.all("*", (req, res, next) => {
     next(err);
 });
 
-export default app;
-
 app.use(ErrorMiddleware);
+
+export default app;

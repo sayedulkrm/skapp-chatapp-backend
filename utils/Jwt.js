@@ -13,21 +13,19 @@ const refreshTokenExpire = parseInt(
 export const accessTokenOptions = {
     expires: new Date(Date.now() + accessTokenExpire * 60 * 60 * 1000),
     maxAge: accessTokenExpire * 60 * 1000,
-    httpOnly: true,
-    // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
-    // secure: false,
-
+    httpOnly: false,
     sameSite: "none",
+    // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
+    secure: true,
 };
 
 export const refreshTokenOptions = {
     expires: new Date(Date.now() + refreshTokenExpire * 24 * 60 * 60 * 1000),
     maxAge: refreshTokenExpire * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
-    // secure: true,
-
+    httpOnly: false,
     sameSite: "none",
+    // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
+    secure: true,
 };
 
 export const sendToken = (user, statusCode, message, res) => {
@@ -38,9 +36,9 @@ export const sendToken = (user, statusCode, message, res) => {
 
     // only set secure in production
 
-    if (process.env.NODE_ENV === "production") {
-        accessTokenOptions.secure = true;
-    }
+    // if (process.env.NODE_ENV === "production") {
+    //     accessTokenOptions.secure = true;
+    // }
 
     res.cookie("access_token", accessToken, accessTokenOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenOptions);
