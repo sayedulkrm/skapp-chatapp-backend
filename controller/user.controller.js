@@ -325,3 +325,16 @@ export const socialAuth = CatchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler(error.message, 500));
     }
 });
+
+// Search Users
+
+export const searchUsers = CatchAsyncError(async (req, res, next) => {
+    const { name } = req.query;
+
+    // const users = await
+
+    res.status(200).json({
+        success: true,
+        message: name,
+    });
+});

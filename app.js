@@ -66,10 +66,12 @@ app.use(
     })
 );
 
-import userRoute from "./routers/user.route.js";
 import googleAuthRoute from "./routers/google-auth.js";
+import userRoute from "./routers/user.route.js";
+import chatRoute from "./routers/chat.route.js";
 
 app.use("/api/v1", userRoute);
+app.use("/api/v1", chatRoute);
 app.use("/api/v1", googleAuthRoute);
 
 app.get("/", (req, res) => {

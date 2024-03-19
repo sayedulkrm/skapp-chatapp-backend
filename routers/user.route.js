@@ -2,6 +2,7 @@ import express from "express";
 import {
     activateUser,
     getUserInfo,
+    searchUsers,
     updateAccessToken,
     userLogin,
     userLogout,
@@ -20,13 +21,21 @@ userRoute.route("/user/activate").post(activateUser);
 
 userRoute.route("/user/login").post(userLogin);
 
-userRoute.route("/user/logout").get(userLogout);
+userRoute
+    .route("/user/logout")
+    .get(updateAccessToken, isAuthenticated, userLogout);
 
 userRoute.route("/user/refreshtoken").get(updateAccessToken);
 
 userRoute
     .route("/user/me")
     .get(updateAccessToken, isAuthenticated, getUserInfo);
+
+// search users
+
+userRoute
+    .route("/user/search")
+    .get(updateAccessToken, isAuthenticated, searchUsers);
 
 // Social Login
 

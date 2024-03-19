@@ -13,7 +13,7 @@ const refreshTokenExpire = parseInt(
 export const accessTokenOptions = {
     expires: new Date(Date.now() + accessTokenExpire * 60 * 60 * 1000),
     maxAge: accessTokenExpire * 60 * 1000,
-    httpOnly: false,
+    httpOnly: true,
     sameSite: "none",
     // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
     secure: true,
@@ -22,7 +22,7 @@ export const accessTokenOptions = {
 export const refreshTokenOptions = {
     expires: new Date(Date.now() + refreshTokenExpire * 24 * 60 * 60 * 1000),
     maxAge: refreshTokenExpire * 24 * 60 * 60 * 1000,
-    httpOnly: false,
+    httpOnly: true,
     sameSite: "none",
     // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
     secure: true,
