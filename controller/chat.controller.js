@@ -1,7 +1,13 @@
-import { ALERT, REFETCH_CHATS } from "../constants/Events.js";
+import {
+    ALERT,
+    NEW_ATTACHMENT,
+    NEW_MESSAGE_ALEART,
+    REFETCH_CHATS,
+} from "../constants/Events.js";
 import { getOtherMembers } from "../lib/helper.js";
 import { CatchAsyncError } from "../middlewares/CatchAsyncError.js";
 import chatModel from "../models/chat.model.js";
+import messageModel from "../models/message.model.js";
 import userModel from "../models/user.model.js";
 import ErrorHandler from "../utils/ErrorHandler.js";
 import { emitEvent } from "../utils/Features.js";
@@ -58,13 +64,17 @@ export const getMyChats = CatchAsyncError(async (req, res, next) => {
     // we can do aggregation
 
     const transFormedChats = chats.map((chat) => {
+        console.log("heyyyy this is chats", chat.members);
+
         const otherMember = getOtherMembers(chat.members, req.user._id);
+
+        console.log("heyyyy this is otherMember", otherMember);
 
         return {
             _id: chat._id,
             name: chat.groupChat ? chat.name : otherMember.name,
             groupChat: chat.groupChat,
-            members: chat.members.reduce((previousValue, currentValue) => {
+            members: chat?.members?.reduce((previousValue, currentValue) => {
                 if (currentValue._id.toString() !== req.user._id.toString()) {
                     previousValue.push(currentValue._id);
                 }
@@ -72,7 +82,7 @@ export const getMyChats = CatchAsyncError(async (req, res, next) => {
                 return previousValue;
             }, []),
             avatar: chat.groupChat
-                ? members.slice(0, 3).map((avatar) => avatar.url)
+                ? chat.members.slice(0, 3).map((member) => member.avatar.url)
                 : [otherMember.avatar.url],
             //    latestMessage: chat.latestMessage,
         };
@@ -260,5 +270,144 @@ export const leaveGroup = CatchAsyncError(async (req, res, next) => {
     res.status(200).json({
         success: true,
         message: "Group left successfully",
+    });
+});
+
+// send attachments
+
+export const sendAttachments = CatchAsyncError(async (req, res, next) => {
+    const { chatId } = req.body;
+
+    const [chat, user] = await Promise.all([
+        chatModel.findById(chatId),
+        userModel.findById(req.user._id, "name"),
+    ]);
+
+    if (!chat) {
+        return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+    }
+
+    const files = req.files || [];
+
+    if (files.length < 1) {
+        return next(new ErrorHandler("Please upload at least one file", 404));
+    }
+
+    // upload files
+
+    const attachments = [];
+
+    const messageForRealTime = {
+        content: "",
+        attachments,
+        sender: {
+            _id: user._id,
+            name: user.name,
+            avatar:
+                user?.avatar?.url ??
+                "https://w7.pngwing.com/pngs/87/237/png-transparent-male-avatar-boy-face-man-user-flat-classy-users-icon.png",
+        },
+        chat: chatId,
+    };
+
+    const messageForDB = {
+        content: "",
+        attachments,
+        sender: user._id,
+        chat: chatId,
+    };
+
+    const message = await messageModel.create(messageForDB);
+
+    emitEvent(req, NEW_ATTACHMENT, chat.members, {
+        message: messageForRealTime,
+        chatId,
+    });
+
+    emitEvent(req, NEW_MESSAGE_ALEART, chat.members, { chatId });
+
+    res.status(200).json({
+        success: true,
+        message,
+    });
+});
+
+// Get chat details
+
+export const getChatDetails = CatchAsyncError(async (req, res, next) => {
+    if (req.query.populate === "true") {
+        const chat = await chatModel
+            .findById(req.params.id)
+            .populate("members", "name avatar")
+            .lean();
+
+        if (!chat) {
+            return next(new ErrorHandler("Chat not found", 404));
+        }
+
+        chat.members = chat.members.map(({ _id, name, avatar }) => ({
+            _id,
+            name,
+            avatar: avatar.url,
+        }));
+
+        res.status(200).json({
+            success: true,
+            chat,
+        });
+    } else {
+        const chat = await chatModel.findById(req.params.id);
+
+        if (!chat) {
+            return next(new ErrorHandler("Chat not found", 404));
+        }
+
+        res.status(200).json({
+            success: true,
+            chat,
+        });
+    }
+});
+
+// Rename Group
+
+export const renameGroup = CatchAsyncError(async (req, res, next) => {
+    const chatId = req.params.id;
+
+    const { name } = req.body;
+
+    if (!name) {
+        return next(new ErrorHandler("Please provide a name", 404));
+    }
+
+    const chat = await chatModel.findById(chatId);
+
+    if (!chat) {
+        return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    if (!chat.groupChat) {
+        return next(new ErrorHandler("This is not a group Chat", 404));
+    }
+
+    console.log("Creator of chat From ====> renameGroup", chat);
+
+    if (chat.creator.toString() !== req.user._id.toString()) {
+        return next(new ErrorHandler("Only creator can rename group", 404));
+    }
+
+    chat.name = name;
+
+    await chat.save();
+
+    emitEvent(req, REFETCH_CHATS, chat.members);
+
+    res.status(200).json({
+        success: true,
+        message: "Group name updated successfully",
     });
 });

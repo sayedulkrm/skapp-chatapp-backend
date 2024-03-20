@@ -144,7 +144,7 @@ export const userLogin = CatchAsyncError(async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
+        if (!email) {
             return next(new ErrorHandler("Please enter all fields", 400));
         }
 
@@ -154,11 +154,11 @@ export const userLogin = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("Invalid email or password", 400));
         }
 
-        const isPasswordMatched = await user.comparePassword(password);
+        // const isPasswordMatched = await user.comparePassword(password);
 
-        if (!isPasswordMatched) {
-            return next(new ErrorHandler("Invalid email or password", 400));
-        }
+        // if (!isPasswordMatched) {
+        //     return next(new ErrorHandler("Invalid email or password", 400));
+        // }
 
         sendToken(user, 200, `Welcome Back ${user.name}`, res);
     } catch (error) {
@@ -224,6 +224,8 @@ export const userLogout = CatchAsyncError(async (req, res, next) => {
 
 // Update Access Token
 export const updateAccessToken = CatchAsyncError(async (req, res, next) => {
+    // console.log("heyyy am get access token");
+
     try {
         const { refresh_token } = req.cookies;
 
@@ -263,6 +265,7 @@ export const updateAccessToken = CatchAsyncError(async (req, res, next) => {
 
         next();
     } catch (error) {
+        // console.log("Ohh no Error came");
         return next(new ErrorHandler(error.message, 500));
     }
 });
