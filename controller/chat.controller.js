@@ -10,7 +10,7 @@ import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
 import userModel from "../models/user.model.js";
 import ErrorHandler from "../utils/ErrorHandler.js";
-import { emitEvent } from "../utils/Features.js";
+import { deleteFilesFromCloudinary, emitEvent } from "../utils/Features.js";
 
 // new group    chat
 export const newGroupChat = CatchAsyncError(async (req, res, next) => {
@@ -409,5 +409,92 @@ export const renameGroup = CatchAsyncError(async (req, res, next) => {
     res.status(200).json({
         success: true,
         message: "Group name updated successfully",
+    });
+});
+
+// Delete chat
+
+export const deleteChat = CatchAsyncError(async (req, res, next) => {
+    const chatId = req.params.id;
+
+    const chat = await chatModel.findById(chatId);
+
+    if (!chat) {
+        return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    const members = chat.members;
+
+    if (chat.groupChat && chat.creator.toString() !== req.user._id.toString()) {
+        return next(new ErrorHandler("Only creator can delete group", 404));
+    }
+
+    if (!chat.groupChat && !chat.members.includes(req.user._id.toString())) {
+        return next(new ErrorHandler("Only members can delete chat", 404));
+    }
+
+    // Here we have to delete all the message as well as attachments or files from cloudinary
+
+    const messagesWithAttachments = await messageModel.find({
+        chat: chatId,
+        attachments: { $exists: true, $ne: [] },
+    });
+
+    const public_ids = [];
+
+    messagesWithAttachments.forEach(({ attachment }) => {
+        attachment.forEach(({ public_id }) => public_ids.push(public_id));
+    });
+
+    await Promise.all([
+        // delete files from cloudinary
+        deleteFilesFromCloudinary(public_ids),
+        chat.deleteOne(),
+        messageModel.deleteMany({ chat: chatId }),
+    ]);
+
+    emitEvent(req, REFETCH_CHATS, members);
+
+    res.status(200).json({
+        success: true,
+        message: "Chat deleted successfully",
+    });
+});
+
+// Get Chat details
+export const getMessages = CatchAsyncError(async (req, res, next) => {
+    //  Watch 3h 37 min in video for this part
+    const chatId = req.params.id;
+
+    const chat = await chatModel.findById(chatId);
+
+    if (!chat) {
+        return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    const { page = 1 } = req.query;
+
+    // Result Per Page
+    const limit = 20;
+
+    const skip = (page - 1) * limit;
+
+    const [messages, totalMessageCount] = await Promise.all([
+        messageModel
+            .find({ chat: chatId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("sender", "name avatar")
+            .lean(),
+        messageModel.countDocuments({ chat: chatId }),
+    ]);
+
+    const totalPages = Math.ceil(totalMessageCount / limit) || 0;
+
+    res.status(200).json({
+        success: true,
+        messages: messages.reverse(),
+        totalPages,
     });
 });

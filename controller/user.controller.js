@@ -14,6 +14,10 @@ import {
     sendToken,
 } from "../utils/Jwt.js";
 import { getUserById } from "../services/user.service.js";
+import chatModel from "../models/chat.model.js";
+import requestModel from "../models/request.model.js";
+import { emitEvent } from "../utils/Features.js";
+import { NEW_REQUEST, REFETCH_CHATS } from "../constants/Events.js";
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -332,12 +336,176 @@ export const socialAuth = CatchAsyncError(async (req, res, next) => {
 // Search Users
 
 export const searchUsers = CatchAsyncError(async (req, res, next) => {
-    const { name } = req.query;
+    const { name = "" } = req.query;
 
     // const users = await
 
+    // finding all my chats
+    const myChats = await chatModel.find({
+        groupChat: false,
+        members: req.user._id,
+    });
+
+    console.log("Heres MY CHAAT ==========>", myChats);
+    // 4h 42 min
+
+    // extracting: ALl users from my chats means Friends and people i have chatted with them
+
+    const allUsersFromMyChats = myChats.map((chat) => chat.members).flat();
+
+    //
+
+    // regex will find patterns expect me and my friends
+    const allUsersExceptMeAndFriends = await userModel.find({
+        _id: { $nin: allUsersFromMyChats },
+        name: { $regex: name, $options: "i" },
+    });
+
+    const users = allUsersExceptMeAndFriends.map(({ _id, name, avatar }) => ({
+        _id,
+        name,
+        avatar: avatar.url,
+    }));
+
     res.status(200).json({
         success: true,
-        message: name,
+        users,
+    });
+});
+
+// send request to friend
+export const sendRequest = CatchAsyncError(async (req, res, next) => {
+    const { userId } = req.body;
+
+    if (!userId) {
+        return next(new ErrorHandler("UserId is required", 400));
+    }
+
+    // Check if the user is already friends with the target user
+    const currentUser = await userModel
+        .findById(req.user._id)
+        .select("friends");
+    if (currentUser.friends.includes(userId)) {
+        return next(
+            new ErrorHandler("You are already friends with this user", 400)
+        );
+    }
+    // Check if a friend request has already been sent
+    const existingRequest = await requestModel.findOne({
+        $or: [
+            { sender: req.user._id, receiver: userId },
+            { sender: userId, receiver: req.user._id },
+        ],
+    });
+
+    if (existingRequest) {
+        return next(new ErrorHandler("You have already sent a request", 400));
+    }
+
+    await requestModel.create({
+        sender: req.user._id,
+        receiver: userId,
+    });
+
+    emitEvent(req, NEW_REQUEST, [userId]);
+
+    res.status(200).json({
+        success: true,
+        message: "Friend Request sent successfully",
+    });
+});
+
+// accept friend request
+
+export const acceptRequest = CatchAsyncError(async (req, res, next) => {
+    const { requestId, accept } = req.body;
+
+    if (!requestId) {
+        return next(new ErrorHandler("User Id is required", 400));
+    }
+
+    if (!accept) {
+        return next(new ErrorHandler("Accept is required", 400));
+    }
+
+    const request = await requestModel
+        .findById(requestId)
+        .populate("sender", "name")
+        .populate("receiver", "name");
+
+    if (!request) {
+        return next(new ErrorHandler("Request not found", 404));
+    }
+
+    console.log("Heyyyyy its req receiver", request.receiver);
+
+    if (request.receiver._id.toString() !== req.user._id.toString()) {
+        return next(
+            new ErrorHandler(
+                "You are not authorized to accept this request",
+                401
+            )
+        );
+    }
+
+    if (!accept) {
+        await request.remove();
+
+        res.status(200).json({
+            success: true,
+            message: "Request rejected successfully",
+        });
+    }
+    const senderId = request.sender._id;
+    const receiverId = request.receiver._id;
+
+    // Add sender's ID to receiver's friends array
+    await userModel.findByIdAndUpdate(receiverId, {
+        $addToSet: { friends: senderId },
+    });
+
+    // Add receiver's ID to sender's friends array
+    await userModel.findByIdAndUpdate(senderId, {
+        $addToSet: { friends: receiverId },
+    });
+
+    const members = [senderId, receiverId];
+
+    await Promise.all([
+        chatModel.create({
+            members,
+            name: `${request.sender.name}-${request.receiver.name}`,
+        }),
+        request.deleteOne(),
+    ]);
+
+    emitEvent(req, REFETCH_CHATS, members);
+
+    res.status(200).json({
+        success: true,
+        message: "Friend request accepted successfully",
+        senderId: senderId,
+    });
+});
+
+// See notification
+
+export const getMyNotification = CatchAsyncError(async (req, res, next) => {
+    const requests = await requestModel
+        .find({ receiver: req.user._id })
+        .populate("sender", "name avatar");
+
+    const allRequest = requests.map(({ sender, _id }) => ({
+        _id,
+        sender: {
+            _id: sender._id,
+            name: sender.name,
+            avatar: sender.avatar.url,
+        },
+    }));
+
+    res.status(200).json({
+        success: true,
+        allRequest,
     });
 });

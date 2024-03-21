@@ -1,7 +1,9 @@
 import express from "express";
 import {
     addMembers,
+    deleteChat,
     getChatDetails,
+    getMessages,
     getMyChats,
     getMyGroups,
     leaveGroup,
@@ -34,7 +36,14 @@ chatRoute
     .route("/chat/message")
     .post(multerUpload.array("files", 5), sendAttachments);
 
+// /messages/chatId
+chatRoute.route("/chat/message/:id").get(getMessages);
+
 // Get Chat Details, rename, delete
-chatRoute.route("/chat/:id").get(getChatDetails).put(renameGroup).delete();
+chatRoute
+    .route("/chat/:id")
+    .get(getChatDetails)
+    .put(renameGroup)
+    .delete(deleteChat);
 
 export default chatRoute;

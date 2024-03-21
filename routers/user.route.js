@@ -1,8 +1,11 @@
 import express from "express";
 import {
+    acceptRequest,
     activateUser,
+    getMyNotification,
     getUserInfo,
     searchUsers,
+    sendRequest,
     updateAccessToken,
     userLogin,
     userLogout,
@@ -36,6 +39,21 @@ userRoute
 userRoute
     .route("/user/search")
     .get(updateAccessToken, isAuthenticated, searchUsers);
+
+// send request and accept request
+userRoute
+    .route("/user/sendrequest")
+    .put(updateAccessToken, isAuthenticated, sendRequest);
+
+userRoute
+    .route("/user/acceptrequest")
+    .put(updateAccessToken, isAuthenticated, acceptRequest);
+
+// To See notifications
+
+userRoute
+    .route("/user/notifications")
+    .get(updateAccessToken, isAuthenticated, getMyNotification);
 
 // Social Login
 
