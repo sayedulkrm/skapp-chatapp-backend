@@ -57,3 +57,43 @@ export const authorizeRoles =
 
         next();
     };
+
+// admin only
+
+export const adminOnly = CatchAsyncError(async (req, res, next) => {
+    const skapp_admin_token = req.cookies.skapp_admin_token;
+
+    console.log("TOKENN", skapp_admin_token);
+
+    if (!skapp_admin_token) {
+        return next(
+            new ErrorHandler("Only Admin can access this resource", 400)
+        );
+    }
+
+    try {
+        const secrect_key = jwt.verify(
+            skapp_admin_token,
+            process.env.ADMIN_JWT_SECRET_KEY
+        );
+
+        console.log("secrect_key", secrect_key);
+
+        const isMatched =
+            secrect_key === (process.env.ADMIN_SECRET_KEY || "batman");
+
+        console.log("isMatched", isMatched);
+
+        if (!isMatched) {
+            return next(new ErrorHandler("Invalid secrect key", 401));
+        }
+    } catch (error) {
+        return next(new ErrorHandler("Access token is not valid", 400));
+    }
+
+    // redis come here
+
+    // then next
+
+    next();
+});

@@ -2,6 +2,7 @@ import express from "express";
 import {
     acceptRequest,
     activateUser,
+    getMyFriends,
     getMyNotification,
     getUserInfo,
     searchUsers,
@@ -54,6 +55,10 @@ userRoute
 userRoute
     .route("/user/notifications")
     .get(updateAccessToken, isAuthenticated, getMyNotification);
+
+userRoute
+    .route("/user/friends")
+    .get(updateAccessToken, isAuthenticated, getMyFriends);
 
 // Social Login
 

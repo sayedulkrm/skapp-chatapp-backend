@@ -18,6 +18,7 @@ import chatModel from "../models/chat.model.js";
 import requestModel from "../models/request.model.js";
 import { emitEvent } from "../utils/Features.js";
 import { NEW_REQUEST, REFETCH_CHATS } from "../constants/Events.js";
+import { getOtherMembers } from "../lib/helper.js";
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -508,4 +509,44 @@ export const getMyNotification = CatchAsyncError(async (req, res, next) => {
         success: true,
         allRequest,
     });
+});
+
+// My friends
+
+export const getMyFriends = CatchAsyncError(async (req, res, next) => {
+    // we can check by user.friends in DB
+
+    const chatId = req.query.chatId;
+
+    const chats = await chatModel
+        .find({ members: req.user._id, groupChat: false })
+        .populate("members", "name avatar");
+
+    const friends = chats.map(({ members }) => {
+        const otherUser = getOtherMembers(members, req.user._id);
+
+        return {
+            _id: otherUser._id,
+            name: otherUser.name,
+            avatar: otherUser.avatar.url,
+        };
+    });
+
+    if (chatId) {
+        const chat = await chatModel.findById(chatId);
+
+        const availableFriends = friends.filter(
+            (friend) => !chat.members.includes(friend._id)
+        );
+
+        res.status(200).json({
+            success: true,
+            friends: availableFriends,
+        });
+    } else {
+        res.status(200).json({
+            success: true,
+            friends,
+        });
+    }
 });

@@ -13,7 +13,7 @@ import cors from "cors";
 import ErrorMiddleware from "./middlewares/ErrorMiddleware.js";
 import ErrorHandler from "./utils/ErrorHandler.js";
 
-import PassportStragy from "./utils/Passport.js";
+import "./utils/Passport.js";
 
 const app = express();
 
@@ -69,8 +69,10 @@ app.use(
 import googleAuthRoute from "./routers/google-auth.js";
 import userRoute from "./routers/user.route.js";
 import chatRoute from "./routers/chat.route.js";
+import adminRoute from "./routers/admin.route.js";
 
 app.use("/api/v1", userRoute);
+app.use("/api/v1", adminRoute);
 app.use("/api/v1", chatRoute);
 app.use("/api/v1", googleAuthRoute);
 
@@ -79,6 +81,8 @@ app.get("/", (req, res) => {
         `<h1>Server is Running. Click <a href="${process.env.FRONTEND_URL}">here</a> to go to Frontend </h1>`
     );
 });
+
+// socket io
 
 app.all("*", (req, res, next) => {
     const err = new ErrorHandler(`Routes ${req.originalUrl} not found`);
