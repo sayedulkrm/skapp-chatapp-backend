@@ -18,13 +18,13 @@ import { updateAccessToken } from "../controller/user.controller.js";
 
 const adminRoute = express.Router();
 
-adminRoute.use(updateAccessToken, isAuthenticated, authorizeRoles("admin"));
+// adminRoute.use(updateAccessToken, isAuthenticated, authorizeRoles("admin"));
 
 adminRoute.post("/admin/verify", adminLogin);
 
 adminRoute.get("/admin/logout", adminLogout);
 
-adminRoute.use(adminOnly);
+// adminRoute.use(adminOnly);
 
 adminRoute.get("/admin", getAdminData);
 adminRoute.get("/admin/users", getAllUsers);

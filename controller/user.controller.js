@@ -16,7 +16,7 @@ import {
 import { getUserById } from "../services/user.service.js";
 import chatModel from "../models/chat.model.js";
 import requestModel from "../models/request.model.js";
-import { emitEvent } from "../utils/Features.js";
+import { emitEvent, uploadFilesToCloudinary } from "../utils/Features.js";
 import { NEW_REQUEST, REFETCH_CHATS } from "../constants/Events.js";
 import { getOtherMembers } from "../lib/helper.js";
 
@@ -28,8 +28,11 @@ import { getOtherMembers } from "../lib/helper.js";
 // Check if the file exists
 
 export const userRegister = CatchAsyncError(async (req, res, next) => {
+    //
+    console.log("HEYYY REGISTER GETTING CALLED");
+
     try {
-        const { email, password, name, avatar } = req.body;
+        const { email, password, name } = req.body;
 
         if (!email || !password || !name) {
             return next(new ErrorHandler("Please enter all fields", 400));
@@ -41,11 +44,25 @@ export const userRegister = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("Email already exist", 400));
         }
 
+        const file = req.file;
+
+        if (!file) {
+            return next(new ErrorHandler("Please upload a Avatar", 400));
+        }
+
         const userData = {
             name,
             email,
             password,
+            file,
         };
+
+        console.log(
+            "HEYYYY AM USER DATAAAAA ===================\n\n",
+            userData,
+            "\n",
+            "END OF USER DATAAAAA ==================== \n\n"
+        );
 
         const activationCodeandToken = createActivationToken(userData);
 
@@ -100,7 +117,7 @@ export const createActivationToken = (user) => {
         },
         process.env.ACTIVATION_SECRET,
         {
-            expiresIn: "5m",
+            expiresIn: "35m",
         }
     );
 
@@ -121,7 +138,14 @@ export const activateUser = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("Invalid Activation Code", 400));
         }
 
-        const { name, email, password } = newUser.user;
+        console.log(
+            "HEYYYY AM NEW USER ===================\n\n",
+            newUser,
+            "\n",
+            "==================== \n\n"
+        );
+
+        const { name, email, password, file } = newUser.user;
 
         const existUser = await userModel.findOne({ email });
 
@@ -129,10 +153,23 @@ export const activateUser = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("User already exist", 400));
         }
 
+        const result = await uploadFilesToCloudinary([file]);
+
+        const avatar = {
+            public_id: result[0].public_id,
+            url: result[0].url,
+        };
+
+        const randomNumber = Math.floor(1000 + Math.random() * 9000);
+
+        const finalUsername = `${name}${randomNumber}`;
+
         await userModel.create({
             name,
             email,
             password,
+            avatar,
+            username: finalUsername,
         });
 
         res.status(200).json({
@@ -159,11 +196,11 @@ export const userLogin = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("Invalid email or password", 400));
         }
 
-        // const isPasswordMatched = await user.comparePassword(password);
+        const isPasswordMatched = await user.comparePassword(password);
 
-        // if (!isPasswordMatched) {
-        //     return next(new ErrorHandler("Invalid email or password", 400));
-        // }
+        if (!isPasswordMatched) {
+            return next(new ErrorHandler("Invalid email or password", 400));
+        }
 
         sendToken(user, 200, `Welcome Back ${user.name}`, res);
     } catch (error) {

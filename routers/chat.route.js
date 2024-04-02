@@ -19,7 +19,7 @@ const chatRoute = express.Router();
 
 // chatRoute.route()
 
-chatRoute.use(isAuthenticated);
+// chatRoute.use(isAuthenticated);
 
 chatRoute.route("/chat/new/group-chat").post(newGroupChat);
 

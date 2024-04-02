@@ -297,6 +297,10 @@ export const sendAttachments = CatchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("Please upload at least one file", 404));
     }
 
+    if (files.length > 5 ) {
+        return next(new ErrorHandler("You can upload only 5 files", 404));
+    }
+
     // upload files
 
     const attachments = [];

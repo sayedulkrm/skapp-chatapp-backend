@@ -7,7 +7,18 @@ import { NEW_MESSAGE, NEW_MESSAGE_ALEART } from "./constants/Events.js";
 import { connectDB } from "./config/db.js";
 import { getSockets } from "./lib/helper.js";
 import messageModel from "./models/message.model.js";
+// Cloudinary Import
+import { v2 as cloudinary } from "cloudinary";
+
 connectDB();
+
+// Connect to cloudinary
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Users socket ids
 
