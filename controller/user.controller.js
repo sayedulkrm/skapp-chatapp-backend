@@ -1,24 +1,27 @@
+import ejs from "ejs";
 import jwt from "jsonwebtoken";
+import path from "path";
 import { CatchAsyncError } from "../middlewares/CatchAsyncError.js";
 import userModel from "../models/user.model.js";
 import ErrorHandler from "../utils/ErrorHandler.js";
-import path from "path";
 import SendMail from "../utils/SendMail.js";
-import ejs from "ejs";
 
 // import fs from "fs";
 import { fileURLToPath } from "url";
+import { NEW_REQUEST, REFETCH_CHATS } from "../constants/Events.js";
+import { getOtherMembers } from "../lib/helper.js";
+import chatModel from "../models/chat.model.js";
+import requestModel from "../models/request.model.js";
+import { getUserById } from "../services/user.service.js";
+import {
+    emitEvent,
+    RegisterProfilePictureUploadFilesToCloudinary,
+} from "../utils/Features.js";
 import {
     accessTokenOptions,
     refreshTokenOptions,
     sendToken,
 } from "../utils/Jwt.js";
-import { getUserById } from "../services/user.service.js";
-import chatModel from "../models/chat.model.js";
-import requestModel from "../models/request.model.js";
-import { emitEvent, uploadFilesToCloudinary } from "../utils/Features.js";
-import { NEW_REQUEST, REFETCH_CHATS } from "../constants/Events.js";
-import { getOtherMembers } from "../lib/helper.js";
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -153,7 +156,9 @@ export const activateUser = CatchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler("User already exist", 400));
         }
 
-        const result = await uploadFilesToCloudinary([file]);
+        const result = await RegisterProfilePictureUploadFilesToCloudinary([
+            file,
+        ]);
 
         const avatar = {
             public_id: result[0].public_id,
