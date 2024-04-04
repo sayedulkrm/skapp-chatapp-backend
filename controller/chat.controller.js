@@ -57,18 +57,21 @@ export const newGroupChat = CatchAsyncError(async (req, res, next) => {
 // its basically in Frontend user sidebar
 export const getMyChats = CatchAsyncError(async (req, res, next) => {
     // find by id
+
     const chats = await chatModel
         .find({ members: req.user._id })
         .populate("members", "name avatar");
 
+    console.log("I FOUND CHATS ========= \n", chats, "\n=================");
+
     // we can do aggregation
 
     const transFormedChats = chats.map((chat) => {
-        console.log("heyyyy this is chats", chat.members);
-
         const otherMember = getOtherMembers(chat.members, req.user._id);
 
         console.log("heyyyy this is otherMember", otherMember);
+
+        console.count("Heyyy");
 
         return {
             _id: chat._id,
@@ -87,6 +90,8 @@ export const getMyChats = CatchAsyncError(async (req, res, next) => {
             //    latestMessage: chat.latestMessage,
         };
     });
+
+    console.count("BaD BAD BAD");
 
     res.status(200).json({
         success: true,
@@ -297,7 +302,7 @@ export const sendAttachments = CatchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("Please upload at least one file", 404));
     }
 
-    if (files.length > 5 ) {
+    if (files.length > 5) {
         return next(new ErrorHandler("You can upload only 5 files", 404));
     }
 

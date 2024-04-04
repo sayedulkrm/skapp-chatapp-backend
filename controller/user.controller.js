@@ -271,10 +271,14 @@ export const userLogout = CatchAsyncError(async (req, res, next) => {
 
 // Update Access Token
 export const updateAccessToken = CatchAsyncError(async (req, res, next) => {
-    // console.log("heyyy am get access token");
+    console.log("heyyy am get access token");
 
     try {
         const { refresh_token } = req.cookies;
+
+        if (!refresh_token) {
+            return next(new ErrorHandler("Please login", 400));
+        }
 
         const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN);
 
@@ -312,7 +316,7 @@ export const updateAccessToken = CatchAsyncError(async (req, res, next) => {
 
         next();
     } catch (error) {
-        // console.log("Ohh no Error came");
+        console.log("Ohh no Error came");
         return next(new ErrorHandler(error.message, 500));
     }
 });
@@ -322,7 +326,7 @@ export const getUserInfo = CatchAsyncError(async (req, res, next) => {
     try {
         const userId = req.user?._id;
 
-        console.log(req.user);
+        // console.log(req.user);
 
         getUserById(userId, res);
     } catch (error) {
@@ -332,7 +336,7 @@ export const getUserInfo = CatchAsyncError(async (req, res, next) => {
 
 // social auth
 export const socialAuth = CatchAsyncError(async (req, res, next) => {
-    console.log("Heyy am social auth", req.user);
+    // console.log("Heyy am social auth", req.user);
 
     try {
         // const { email, name, avatar } = req.user;

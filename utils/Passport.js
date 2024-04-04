@@ -16,7 +16,7 @@ const PassportStragy = passport.use(
             scope: ["profile", "email"],
         },
         async (accessToken, refreshToken, profile, done) => {
-            console.log("Profile ID:", profile.id);
+            // console.log("Profile ID:", profile.id);
 
             try {
                 // console.log("Profile ID:", profile);
@@ -53,7 +53,7 @@ const PassportStragy = passport.use(
 
                 done(null, profile);
             } catch (error) {
-                console.log("error comes");
+                // console.log("error comes");
                 done(error, false);
             }
 

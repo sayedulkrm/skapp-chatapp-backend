@@ -72,9 +72,9 @@ import chatRoute from "./routers/chat.route.js";
 import adminRoute from "./routers/admin.route.js";
 
 app.use("/api/v1", userRoute);
-app.use("/api/v1", adminRoute);
-app.use("/api/v1", chatRoute);
 app.use("/api/v1", googleAuthRoute);
+app.use("/api/v1", chatRoute);
+app.use("/api/v1", adminRoute);
 
 app.get("/", (req, res) => {
     res.send(

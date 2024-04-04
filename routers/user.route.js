@@ -25,11 +25,11 @@ userRoute.route("/user/activate").post(activateUser);
 
 userRoute.route("/user/login").post(userLogin);
 
+userRoute.route("/user/refreshtoken").get(updateAccessToken);
+
 userRoute
     .route("/user/logout")
     .get(updateAccessToken, isAuthenticated, userLogout);
-
-userRoute.route("/user/refreshtoken").get(updateAccessToken);
 
 userRoute
     .route("/user/me")
