@@ -30,6 +30,11 @@ const userSchema = new Schema(
             select: false,
         },
 
+        bio: {
+            type: String,
+            default: "",
+        },
+
         avatar: {
             public_id: {
                 type: String,

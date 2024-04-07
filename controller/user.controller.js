@@ -397,8 +397,11 @@ export const searchUsers = CatchAsyncError(async (req, res, next) => {
     // 4h 42 min
 
     // extracting: ALl users from my chats means Friends and people i have chatted with them
+    // Extract all users from my chats (excluding myself)
+    // const allUsersFromMyChats = myChats.flatMap(chat => chat.members.filter(memberId => memberId.toString() !== req.user._id.toString()));
 
-    const allUsersFromMyChats = myChats.map((chat) => chat.members).flat();
+    //  extracting All Users from my chats means friends or people I have chatted with
+    const allUsersFromMyChats = myChats.flatMap((chat) => chat.members);
 
     //
 
@@ -407,6 +410,12 @@ export const searchUsers = CatchAsyncError(async (req, res, next) => {
         _id: { $nin: allUsersFromMyChats },
         name: { $regex: name, $options: "i" },
     });
+
+    // // Find users whose IDs are not in my chats and exclude myself from the search
+    // const users = await userModel.find({
+    //     _id: { $nin: [...allUsersFromMyChats, req.user._id] }, // Exclude myself
+    //     name: { $regex: name, $options: "i" }, // Search by name
+    // });
 
     const users = allUsersExceptMeAndFriends.map(({ _id, name, avatar }) => ({
         _id,

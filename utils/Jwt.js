@@ -11,21 +11,19 @@ const refreshTokenExpire = parseInt(
 );
 
 export const accessTokenOptions = {
-    expires: new Date(Date.now() + accessTokenExpire * 60 * 60 * 1000),
-    maxAge: accessTokenExpire * 60 * 1000,
+    expires: new Date(Date.now() + accessTokenExpire * 60 * 1000), // Convert minutes to milliseconds
+    maxAge: accessTokenExpire * 60 * 1000, // Convert minutes to milliseconds
     httpOnly: true,
     sameSite: "none",
-    // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
-    secure: true,
+    secure: true, // Secure flag is set to true in production
 };
 
 export const refreshTokenOptions = {
-    expires: new Date(Date.now() + refreshTokenExpire * 24 * 60 * 60 * 1000),
-    maxAge: refreshTokenExpire * 24 * 60 * 60 * 1000,
+    expires: new Date(Date.now() + refreshTokenExpire * 60 * 60 * 24 * 1000), // Convert days to milliseconds
+    maxAge: refreshTokenExpire * 60 * 60 * 24 * 1000, // Convert days to milliseconds
     httpOnly: true,
     sameSite: "none",
-    // Don't add secure while in Localhost mode. It wont save the cookie in browser if secure is true.
-    secure: true,
+    secure: true, // Secure flag is set to true in production
 };
 
 export const sendToken = (user, statusCode, message, res) => {
