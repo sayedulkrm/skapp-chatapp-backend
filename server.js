@@ -9,6 +9,8 @@ import { getSockets } from "./lib/helper.js";
 import messageModel from "./models/message.model.js";
 // Cloudinary Import
 import { v2 as cloudinary } from "cloudinary";
+import cookieParser from "cookie-parser";
+import { socketAuthentication } from "./middlewares/Auth.js";
 
 connectDB();
 
@@ -29,8 +31,17 @@ const server = createServer(app);
 const io = new Server(server, {
     cors: {
         origin: process.env.FRONTEND_URL,
-        methods: ["GET", "POST"],
+        // methods: ["GET", "PUT", "POST", "DELETE"],
+        credentials: true,
     },
+});
+
+// socket io middleware
+
+io.use((socket, next) => {
+    cookieParser()(socket.request, socket.request.res, async (err) => {
+        await socketAuthentication(err, socket, next);
+    });
 });
 
 // 6h 47 min in video
@@ -38,7 +49,7 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
     console.log("user connected", socket.id);
 
-    const user = { _id: "asd", name: "asd" };
+    const user = socket.user;
 
     usersSocketIDs.set(user._id.toString(), socket.id);
 
@@ -47,8 +58,8 @@ io.on("connection", (socket) => {
             content: message,
             _id: uuid(),
             sender: {
-                _id: "asd", //user.id,
-                name: "asd", //user.name
+                _id: user._id, //user.id,
+                name: user.name, //user.name
             },
             chatId,
 

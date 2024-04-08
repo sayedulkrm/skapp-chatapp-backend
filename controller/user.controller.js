@@ -393,7 +393,7 @@ export const searchUsers = CatchAsyncError(async (req, res, next) => {
         members: req.user._id,
     });
 
-    console.log("Heres MY CHAAT ==========>", myChats);
+    // console.log("Heres MY CHAAT ==========>", myChats);
     // 4h 42 min
 
     // extracting: ALl users from my chats means Friends and people i have chatted with them

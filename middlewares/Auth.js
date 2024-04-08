@@ -97,3 +97,43 @@ export const adminOnly = CatchAsyncError(async (req, res, next) => {
 
     next();
 });
+
+export const socketAuthentication = async (err, socket, next) => {
+    try {
+        if (err) {
+            return next(new ErrorHandler("Access token is not valid", 400));
+        }
+
+        const access_token = socket.request.cookies.access_token;
+
+        if (!access_token) {
+            return next(
+                new ErrorHandler("Please login to access this resource", 400)
+            );
+        }
+
+        try {
+            const decoded = jwt.verify(access_token, process.env.ACCESS_TOKEN);
+
+            // if (!decoded) {
+            //     return next(new ErrorHandler("Invalid access_token", 400));
+            // }
+
+            // find the user
+            const user = await userModel.findById(decoded._id);
+
+            if (!user) {
+                return next(new ErrorHandler("User not found", 404));
+            }
+
+            socket.user = user; // Set req.user to the decoded user data
+        } catch (error) {
+            return next(new ErrorHandler("Access token is not valid", 400));
+        }
+
+        next();
+    } catch (error) {
+        console.log("Error From SOCKET IO", error);
+        return next(new ErrorHandler("Access token is not valid", 400));
+    }
+};

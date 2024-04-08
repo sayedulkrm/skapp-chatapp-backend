@@ -62,16 +62,16 @@ export const getMyChats = CatchAsyncError(async (req, res, next) => {
         .find({ members: req.user._id })
         .populate("members", "name avatar");
 
-    console.log("I FOUND CHATS ========= \n", chats, "\n=================");
+    // console.log("I FOUND CHATS ========= \n", chats, "\n=================");
 
     // we can do aggregation
 
     const transFormedChats = chats.map((chat) => {
         const otherMember = getOtherMembers(chat.members, req.user._id);
 
-        console.log("heyyyy this is otherMember", otherMember);
+        // console.log("heyyyy this is otherMember", otherMember);
 
-        console.count("Heyyy");
+        // console.count("Heyyy");
 
         return {
             _id: chat._id,
@@ -91,7 +91,7 @@ export const getMyChats = CatchAsyncError(async (req, res, next) => {
         };
     });
 
-    console.count("BaD BAD BAD");
+    // console.count("BaD BAD BAD");
 
     res.status(200).json({
         success: true,
