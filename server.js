@@ -68,9 +68,11 @@ io.on("connection", (socket) => {
 
         const messageForDb = {
             content: message,
-            sender: "asd", //user.id,
-            chatId,
+            sender: user._id, //user.id,
+            chat: chatId,
         };
+
+        console.log("MEMBERS===================", members);
 
         const membersSocket = getSockets(members);
 
