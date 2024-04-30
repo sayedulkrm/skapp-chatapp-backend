@@ -36,6 +36,8 @@ const io = new Server(server, {
     },
 });
 
+app.set("io", io);
+
 // socket io middleware
 
 io.use((socket, next) => {

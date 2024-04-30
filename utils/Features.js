@@ -1,9 +1,12 @@
 import { v2 as cloudinary } from "cloudinary";
 import { v4 as uuid } from "uuid";
-import { getBase64, registerGetBase64 } from "../lib/helper.js";
+import { getBase64, getSockets, registerGetBase64 } from "../lib/helper.js";
 
 export const emitEvent = (req, event, users, data) => {
     console.log("Emitting event: ", event);
+    const io = req.app.get("io");
+    const usersSocket = getSockets(users);
+    io.to(usersSocket).emit(event, data);
 };
 
 export const deleteFilesFromCloudinary = async (public_ids) => {};

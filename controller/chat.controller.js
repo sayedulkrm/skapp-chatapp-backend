@@ -1,6 +1,6 @@
 import {
     ALERT,
-    NEW_ATTACHMENT,
+    NEW_MESSAGE,
     NEW_MESSAGE_ALEART,
     REFETCH_CHATS,
 } from "../constants/Events.js";
@@ -10,7 +10,11 @@ import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
 import userModel from "../models/user.model.js";
 import ErrorHandler from "../utils/ErrorHandler.js";
-import { deleteFilesFromCloudinary, emitEvent } from "../utils/Features.js";
+import {
+    deleteFilesFromCloudinary,
+    emitEvent,
+    uploadFilesToCloudinary,
+} from "../utils/Features.js";
 
 // new group    chat
 export const newGroupChat = CatchAsyncError(async (req, res, next) => {
@@ -308,7 +312,9 @@ export const sendAttachments = CatchAsyncError(async (req, res, next) => {
 
     // upload files
 
-    const attachments = [];
+    console.log(files);
+
+    const attachments = await uploadFilesToCloudinary(files);
 
     const messageForRealTime = {
         content: "",
@@ -332,13 +338,15 @@ export const sendAttachments = CatchAsyncError(async (req, res, next) => {
 
     const message = await messageModel.create(messageForDB);
 
-    emitEvent(req, NEW_ATTACHMENT, chat.members, {
+    emitEvent(req, NEW_MESSAGE, chat.members, {
         message: messageForRealTime,
         chatId,
     });
 
     emitEvent(req, NEW_MESSAGE_ALEART, chat.members, { chatId });
 
+    //
+    console.log("HEYYYYY I DID UPLOADDDD");
     res.status(200).json({
         success: true,
         message,
