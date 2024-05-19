@@ -2,7 +2,12 @@ import app from "./app.js";
 import { v4 as uuid } from "uuid";
 import { Server } from "socket.io";
 import { createServer } from "http";
-import { NEW_MESSAGE, NEW_MESSAGE_ALEART } from "./constants/Events.js";
+import {
+    NEW_MESSAGE,
+    NEW_MESSAGE_ALEART,
+    START_TYPING,
+    STOP_TYPING,
+} from "./constants/Events.js";
 
 import { connectDB } from "./config/db.js";
 import { getSockets } from "./lib/helper.js";
@@ -94,6 +99,21 @@ io.on("connection", (socket) => {
         } catch (error) {
             console.log(error);
         }
+    });
+
+    // STRAT TYPING
+
+    socket.on(START_TYPING, ({ chatId, members }) => {
+        const membersSocket = getSockets(members);
+
+        socket.to(membersSocket).emit(START_TYPING, { chatId });
+    });
+
+    // STOP TYPING
+    socket.on(STOP_TYPING, ({ chatId, members }) => {
+        const membersSocket = getSockets(members);
+
+        socket.to(membersSocket).emit(STOP_TYPING, { chatId });
     });
 
     socket.on("disconnect", () => {

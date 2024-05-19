@@ -476,12 +476,10 @@ export const sendRequest = CatchAsyncError(async (req, res, next) => {
 export const acceptRequest = CatchAsyncError(async (req, res, next) => {
     const { requestId, accept } = req.body;
 
+    console.warn("HEYYY ITS ACCEPT REQ \n", requestId, accept);
+
     if (!requestId) {
         return next(new ErrorHandler("User Id is required", 400));
-    }
-
-    if (!accept) {
-        return next(new ErrorHandler("Accept is required", 400));
     }
 
     const request = await requestModel
@@ -505,9 +503,9 @@ export const acceptRequest = CatchAsyncError(async (req, res, next) => {
     }
 
     if (!accept) {
-        await request.remove();
+        await request.deleteOne();
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Request rejected successfully",
         });
