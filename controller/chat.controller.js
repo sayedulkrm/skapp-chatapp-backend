@@ -117,7 +117,7 @@ export const getMyGroups = CatchAsyncError(async (req, res, next) => {
         _id,
         groupChat,
         name,
-        avatar: members.slice(0, 3).map((avatar) => avatar.url),
+        avatar: members.slice(0, 3).map(({ avatar }) => avatar.url),
     }));
 
     res.status(200).json({
